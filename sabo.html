@@ -1,73 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saboteur Score Counter</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #0b0b0b;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Saboteur Score Counter</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #0b0b0b;
+    color: #fff;
+    font-family: system-ui, sans-serif;
+  }
 
-    .card {
-      width: min(440px, 95vw);
-      background: #151515;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,.7);
-    }
+  .card {
+    width: min(440px, 95vw);
+    background: #151515;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,.7);
+  }
 
-    h1 { text-align: center; }
+  h1 { text-align: center; }
+  input, button {
+    width: 100%;
+    padding: 14px;
+    margin: 8px 0;
+    border-radius: 14px;
+    border: none;
+    font-size: 1rem;
+  }
+  input { background: #2a2a2a; color: #fff; }
+  button {
+    background: #d4a017;
+    color: #000;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  button:active { transform: scale(.95); }
+  .secondary { background: #333; color: #fff; }
+  .danger { background: #a33; color: #fff; }
+  .hidden { display: none; }
+  ul { list-style: none; padding: 0; }
+  li { margin: 4px 0; color: #aaa; }
+  .player { font-size: 2rem; text-align: center; margin: 20px 0; }
+  .points { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 12px; }
+  .controls { display: flex; gap: 10px; margin-top: 12px; }
+  .point-btn { padding: 12px; font-size: 1.2rem; border-radius: 12px; cursor: pointer; transition: transform 0.1s ease; }
+  .point-btn:active { transform: scale(.9); }
 
-    input, button {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border-radius: 14px;
-      border: none;
-      font-size: 1rem;
-    }
-
-    input { background: #2a2a2a; color: #fff; }
-
-    button {
-      background: #d4a017;
-      color: #000;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    button:active { transform: scale(.97); }
-
-    .secondary { background: #333; color: #fff; }
-    .danger { background: #a33; color: #fff; }
-
-    .hidden { display: none; }
-
-    ul { list-style: none; padding: 0; }
-    li { margin: 4px 0; color: #aaa; }
-
-    .player { font-size: 2rem; text-align: center; margin: 20px 0; }
-
-    .points {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .controls { display: flex; gap: 10px; margin-top: 12px; }
-  </style>
+  /* Podium */
+  .podium { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin: 30px 0; }
+  .place { flex:1; border-radius:16px 16px 0 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding:12px; animation:rise 0.6s ease forwards; }
+  .place.first { height:160px; background: linear-gradient(180deg,#ffd700,#bfa100); animation-delay:0.2s; }
+  .place.second { height:120px; background: linear-gradient(180deg,#c0c0c0,#8f8f8f); }
+  .place.third { height:100px; background: linear-gradient(180deg,#cd7f32,#8a531f); animation-delay:0.4s; }
+  .rank { font-size:1.6rem; font-weight:700; margin-bottom:6px; }
+  .name { font-size:1.1rem; font-weight:600; text-align:center; }
+  @keyframes rise { from { transform: translateY(60px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+</style>
 </head>
 <body>
 <div class="card">
-
   <div id="setup">
     <h1>Saboteur</h1>
     <input id="playerName" placeholder="Player name" />
@@ -75,24 +73,16 @@
     <ul id="playerList"></ul>
     <button class="secondary" id="startBtn">Start Match</button>
   </div>
-
   <div id="play" class="hidden">
     <h1>Game Running</h1>
     <button id="roundOverBtn">Round Over</button>
   </div>
-
   <div id="scoring" class="hidden">
     <h1>Scoring</h1>
     <div class="player" id="currentPlayer"></div>
-    <div class="points">
-      <button data-p="0">0</button>
-      <button data-p="1">1</button>
-      <button data-p="2">2</button>
-      <button data-p="3">3</button>
-    </div>
+    <div class="points" id="pointsContainer"></div>
     <button class="secondary" id="undoBtn">Undo</button>
   </div>
-
   <div id="scoreboard" class="hidden">
     <h1>Scores</h1>
     <ul id="scores"></ul>
@@ -101,119 +91,49 @@
       <button id="endGameBtn">End Game</button>
     </div>
   </div>
-
   <div id="podium" class="hidden">
     <h1>Final Standings</h1>
-    <ol id="finalList"></ol>
+    <div class="podium" id="podiumBlocks"></div>
     <button class="danger" id="resetBtn">New Match</button>
   </div>
-
 </div>
-
+<audio id="clickSound" src="click.mp3"></audio>
 <script>
-  let players = [];
-  let index = 0;
-  let history = [];
-
-  const $ = id => document.getElementById(id);
-
-  function save() {
-    localStorage.setItem('saboteurGame', JSON.stringify(players));
-  }
-
-  function load() {
-    try {
-      const data = JSON.parse(localStorage.getItem('saboteurGame'));
-      if (Array.isArray(data)) players = data;
-    } catch { players = []; }
-  }
-
-  function show(a, b) {
-    $(a).classList.add('hidden');
-    $(b).classList.remove('hidden');
-  }
-
-  function renderPlayers() {
-    $('playerList').innerHTML = '';
-    players.forEach(p => {
-      const li = document.createElement('li');
-      li.textContent = p.name;
-      $('playerList').appendChild(li);
-    });
-  }
-
-  load();
-  renderPlayers();
-
-  $('addBtn').onclick = () => {
-    const name = $('playerName').value.trim();
-    if (!name) return;
-    players.push({ name, score: 0 });
-    $('playerName').value = '';
-    save();
-    renderPlayers();
-  };
-
-  $('startBtn').onclick = () => {
-    if (!players.length) return;
-    show('setup', 'play');
-  };
-
-  $('roundOverBtn').onclick = () => {
-    index = 0;
-    history = [];
-    $('currentPlayer').textContent = players[index].name;
-    show('play', 'scoring');
-  };
-
-  document.querySelectorAll('.points button').forEach(btn => {
-    btn.onclick = () => {
-      const p = Number(btn.dataset.p);
-      history.push({ index, p });
-      players[index].score += p;
-      index++;
-      save();
-      if (index >= players.length) {
-        $('scores').innerHTML = '';
-        [...players].sort((a,b)=>b.score-a.score).forEach(pl=>{
-          const li = document.createElement('li');
-          li.textContent = `${pl.name}: ${pl.score}`;
-          $('scores').appendChild(li);
-        });
-        show('scoring','scoreboard');
-      } else {
-        $('currentPlayer').textContent = players[index].name;
-      }
-    };
+let players=[];
+let index=0;
+let history=[];
+const $=id=>document.getElementById(id);
+const pointsContainer=$('pointsContainer');
+const clickSound=$('clickSound');
+clickSound.volume = 0.25
+function save(){localStorage.setItem('saboteurGame',JSON.stringify(players));}
+function load(){try{const data=JSON.parse(localStorage.getItem('saboteurGame'));if(Array.isArray(data))players=data;}catch{players=[];}}
+function show(a,b){$(a).classList.add('hidden');$(b).classList.remove('hidden');}
+function renderPlayers(){$('playerList').innerHTML='';players.forEach(p=>{$('playerList').appendChild(Object.assign(document.createElement('li'),{textContent:p.name}));});}
+function playClick(){if(clickSound){clickSound.currentTime=0;clickSound.play().catch(()=>{});}if(navigator.vibrate){navigator.vibrate(20);}}
+function renderPointButtons(){pointsContainer.innerHTML='';for(let i=0;i<=10;i++){const btn=document.createElement('button');btn.className='point-btn';btn.textContent=i;btn.onclick=()=>{assignPoints(i);playClick();};pointsContainer.appendChild(btn);}const plus=document.createElement('button');plus.className='point-btn';plus.textContent='+1';plus.onclick=()=>{assignPoints(1);playClick();};pointsContainer.appendChild(plus);const minus=document.createElement('button');minus.className='point-btn';minus.textContent='-1';minus.onclick=()=>{assignPoints(-1);playClick();};pointsContainer.appendChild(minus);}
+function assignPoints(p){history.push({index,p});players[index].score+=p;index++;save();if(index>=players.length){$('scores').innerHTML='';[...players].sort((a,b)=>b.score-a.score).forEach(pl=>{$('scores').appendChild(Object.assign(document.createElement('li'),{textContent:`${pl.name}: ${pl.score}`}));});show('scoring','scoreboard');}else{$('currentPlayer').textContent=players[index].name;}}
+load();renderPlayers();
+$('addBtn').onclick=()=>{const name=$('playerName').value.trim();if(!name)return;players.push({name,score:0});$('playerName').value='';save();renderPlayers();playClick();};
+$('startBtn').onclick=()=>{if(!players.length)return;show('setup','play');playClick();};
+$('roundOverBtn').onclick=()=>{index=0;history=[];$('currentPlayer').textContent=players[index].name;renderPointButtons();show('play','scoring');playClick();};
+$('undoBtn').onclick=()=>{const last=history.pop();if(!last)return;index=last.index;players[index].score-=last.p;$('currentPlayer').textContent=players[index].name;save();playClick();};
+$('nextRoundBtn').onclick=()=>{show('scoreboard','play');playClick();};
+$('endGameBtn').onclick=()=>{
+  $('podiumBlocks').innerHTML='';
+  const sorted=[...players].sort((a,b)=>b.score-a.score);
+  sorted.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='place';
+    if(i===0)div.classList.add('first');
+    else if(i===1)div.classList.add('second');
+    else if(i===2)div.classList.add('third');
+    div.innerHTML=`<div class='rank'>${i+1}</div><div class='name'>${p.name}: ${p.score}</div>`;
+    $('podiumBlocks').appendChild(div);
   });
-
-  $('undoBtn').onclick = () => {
-    const last = history.pop();
-    if (!last) return;
-    index = last.index;
-    players[index].score -= last.p;
-    $('currentPlayer').textContent = players[index].name;
-    save();
-  };
-
-  $('nextRoundBtn').onclick = () => show('scoreboard','play');
-
-  $('endGameBtn').onclick = () => {
-    $('finalList').innerHTML='';
-    [...players].sort((a,b)=>b.score-a.score).forEach(p=>{
-      const li=document.createElement('li');
-      li.textContent=`${p.name} – ${p.score}`;
-      $('finalList').appendChild(li);
-    });
-    show('scoreboard','podium');
-  };
-
-  $('resetBtn').onclick = () => {
-    players=[];
-    localStorage.removeItem('saboteurGame');
-    show('podium','setup');
-    renderPlayers();
-  };
+  show('scoreboard','podium');playClick();
+};
+$('resetBtn').onclick=()=>{players=[];localStorage.removeItem('saboteurGame');show('podium','setup');renderPlayers();playClick();};
 </script>
 </body>
 </html>
